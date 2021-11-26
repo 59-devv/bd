@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <meta charset="UTF-8">
+    <title>회원가입 페이지</title>
+
+    <script th:inline="javascript">
+
+        let loginUsername = [[${loginUsername}]];
+
+        $(document).ready(function () {
+            // 이미 로그인 된 사용자가 접속 시, 화면 띄우지 않고 메인으로 돌려보내기
+            if (loginUsername != null) {
+                $('#login-form').hide();
+                alert("이미 로그인 되어있습니다.")
+                window.location.href="/";
+            }
+        })
+
+        // 아이디 확인 정규표현식
+        function is_nickname(asValue) {
+            let regExp = /^(?=.*[a-zA-Z])[-a-zA-Z0-9_.]{2,10}$/;
+            // True/False 형태로 반환
+            return regExp.test(asValue);
+        }
+
+        // 비밀번호 확인 정규표현식
+        function is_password(asValue) {
+            let regExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z!@#$%^&*]{8,20}$/;
+            // True/False 형태로 반환
+            return regExp.test(asValue);
+        }
+
+        // 아이디 체크 기능
+        function check_dup() {
+            let username = $("#input-username").val();
+            //입력칸이 공백이면 text 표시하고 포커스는 입력칸
+            if (username == "") {
+                $("#help-id")
+                    .text("아이디를 입력해주세요.")
+                    .removeClass("is-safe")
+                    .addClass("is-danger");
+                $("#input-username").focus();
+                return;
+            }
+            //입력한 값이 정규표현식에 맞지 않으면 text 표시하고 포커스는 입력칸
+            if (!is_nickname(username)) {
+                $("#help-id")
+                    .text(
+                        "아이디의 형식을 확인해주세요. 영문과 숫자, 일부 특수문자(._-) 사용 가능. 2-10자 길이"
+                    )
+                    .removeClass("is-safe")
+                    .addClass("is-danger");
+                $("#input-username").focus();
+                return;
+            }
+            let data = {
+                'username': username
+            }
+            // 아이디 중복체크
+            $.ajax({
+                type: "POST",
+                url: "/api/sign_up/check_dup",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    console.log(response);
+                    //입력한 값이 exists로 불러온 db의 username에 일치하면 text 표시
+                    if (response === true) {
+                        $("#help-id")
+                            .text("이미 존재하는 아이디입니다.")
+                            .removeClass("is-safe")
+                            .addClass("is-danger");
+                        $("#input-username").focus();
+                        //아니면 사용가능하다는 text 표시
+                    } else {
+                        $("#help-id")
+                            .text("사용할 수 있는 아이디입니다.")
+                            .removeClass("is-danger")
+                            .addClass("is-success");
+                    }
+                },
+            });
+        }
+
+        function signUp() {
+            let username = $("#input-username").val();
+            let password = $("#input-password").val();
+            let password2 = $("#input-password2").val();
+            let email = $("#input-email").val();
+            let data = {
+                'username': username,
+                'password': password,
+                'password2': password2,
+                'email': email
+            };
+            console.log(username, password, password2, email);
+            $.ajax({
+                type: "POST",
+                url: "/user/signup",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    console.log(response);
+                    if (response["result"] === "Success"){
+                        $("#id_msg").text("사용 가능한 아이디입니다.");
+                        $("#id_msg").css({"color": "green"});
+                        $("#pw_msg").text("사용 가능한 비밀번호입니다.");
+                        $("#pw_msg").css({"color": "green"});
+                        $("#pw2_msg").text("비밀번호가 일치합니다.");
+                        $("#pw2_msg").css({"color": "green"});
+                        setTimeout(() => alert("회원가입에 성공했습니다."), 250);
+                        setTimeout(() => window.location.href="/user/login", 250);
+                    } else {
+                        console.log(response["idCheck"], response["pwCheck"], response["pwCheck2"])
+                        if(response["idCheck"] !== "") {
+                            $("#id_msg").text(response["idCheck"]);
+                            $("#id_msg").css({"color": "red"});
+                        } else {
+                            $("#id_msg").text("사용 가능한 아이디입니다.");
+                            $("#id_msg").css({"color": "green"});
+                        }
+                        if(response["pwCheck"] !== "") {
+                            $("#pw_msg").text(response["pwCheck"]);
+                            $("#pw_msg").css({"color": "red"});
+                        } else {
+                            $("#pw_msg").text("사용 가능한 비밀번호입니다.");
+                            $("#pw_msg").css({"color": "green"});
+                        }
+                        if(response["pwCheck2"] !== "") {
+                            $("#pw2_msg").text(response["pwCheck2"]);
+                            $("#pw2_msg").css({"color": "red"});
+                        } else {
+                            $("#pw2_msg").text("비밀번호가 일치합니다.");
+                            $("#pw2_msg").css({"color": "green"});
+                        }
+                    }
+                }
+            })
+        }
+
+    </script>
+</head>
+<body>
+<div id="login-form">
+    <div id="login-title">Signup My Board</div>
+        <div class="login-id-label">닉네임</div>
+        <input id="input-username" type="text" placeholder="닉네임을 입력해주세요." class="login-input-box">
+        <p id="help-id1" class=""><span id="id_msg">3자 이상의 영문 및 숫자로 구성되어야 합니다.</span>
+        </p>
+
+        <div id="password" class="login-id-label">비밀번호</div>
+        <input id="input-password" type="password" placeholder="비밀번호를 입력해주세요." class="login-input-box">
+        <p id="help-password1" class=""><span id="pw_msg">4자 이상의 영문 및 숫자로 구성되며, 닉네임을 포함할 수 없습니다.</span>
+        </p>
+
+        <div id="password-check" class="login-id-label">비밀번호 확인</div>
+        <input id="input-password2" type="password" placeholder="비밀번호를 한번 더 입력" class="login-input-box">
+        <p id="help-password21" class=""><span id="pw2_msg">비밀번호를 한번 더 입력해주세요.</span>
+        </p>
+
+        <div class="login-id-label">E-mail</div>
+        <input id="input-email" type="text" placeholder="메일주소 입력" class="login-input-box">
+        <button id="login-id-submit" onclick="signUp()">회원 가입</button>
+</div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <meta charset="UTF-8">
+    <title>로그인 페이지</title>
+
+    <script th:inline="javascript">
+
+        let loginUsername = [[${loginUsername}]];
+
+        $(document).ready(function () {
+            // 이미 로그인 된 사용자가 접속 시, 화면 띄우지 않고 메인으로 돌려보내기
+            if (loginUsername != null) {
+                $('#login-form').hide();
+                alert("이미 로그인 되어있습니다.")
+                window.location.href = "/";
+            }
+        })
+    </script>
+</head>
+<body>
+<div id="login-form">
+    <div id="login-title">Log into My Board</div>
+    <button id="login-kakao-btn"
+            onclick="location.href='https://kauth.kakao.com/oauth/authorize?client_id=2bbe979f5fff3c4ab9f79ad6a7be6729&redirect_uri=http://3.36.130.212/user/kakao/callback&response_type=code'">
+        카카오로 로그인하기
+    </button>
+    <button id="login-id-btn" onclick="location.href='/user/signup'">
+        회원 가입하기
+    </button>
+    <form action="/user/login" method="post">
+        <div class="login-id-label">아이디</div>
+        <input type="text" name="username" class="login-input-box">
+
+        <div class="login-id-label">비밀번호</div>
+        <input type="password" name="password" class="login-input-box">
+
+        <button id="login-id-submit">로그인</button>
+    </form>
+    <div id="login-failed" style="display:none" class="alert alert-danger" role="alert">닉네임 또는 패스워드를 확인해주세요.</div>
+</div>
+</body>
+<script>
+    const href = location.href;
+    const queryString = href.substring(href.indexOf("?") + 1)
+    if (queryString === 'error') {
+        const errorDiv = document.getElementById('login-failed');
+        errorDiv.style.display = 'block';
+    }
+</script>
+</html>

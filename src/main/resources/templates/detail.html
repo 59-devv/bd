@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모두의 게시판</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500&display=swap" rel="stylesheet">
+
+    <script th:inline="javascript">
+
+        let global_id = [[${result.getId()}]]
+        let loginUsername = [[${loginUsername}]]
+
+        $(document).ready(function () {
+        })
+
+
+         // 게시글 수정버튼을 눌렀을 때 화면 기능
+        function editContent() {
+            showEdits();
+            let title = $(`#title`).text().trim();
+            let contents = $(`#contents`).text().trim();
+            $(`#titlearea`).val(title);
+            $(`#textarea`).val(contents);
+        }
+
+        function showEdits() {
+            $(`#editTitle`).show();
+            $(`#editarea`).show();
+            $(`#submit`).show();
+
+            $(`#title`).hide();
+            $(`#delete`).hide();
+            $(`#contents`).hide();
+            $(`#modify`).hide();
+        }
+
+        // 게시글 수정완료를 눌렀을 때 게시글 최종 수정 기능
+        function editComplete() {
+
+            let username = [[${result.getUsername()}]];
+            let title = $(`#titlearea`).val().trim();
+            let contents = $(`#textarea`).val().trim();
+            if (contents == '') {
+                alert('게시글 내용을 입력해주세요.')
+                $('#textarea').focus();
+                return;
+            }
+            let data = {
+                'username': username,
+                'title': title,
+                'contents': contents
+            };
+
+            $.ajax({
+                type: "PUT",
+                url: `/api/content/${global_id}`,
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    alert('게시글 변경이 완료되었습니다.');
+                    window.location.reload();
+                }
+            });
+        }
+
+        function deleteContent() {
+            $.ajax({
+                type: "DELETE",
+                url: `/api/content/${global_id}`,
+                success: function (response) {
+                    alert('게시글 삭제에 성공하였습니다.');
+                    window.location.href="/";
+                }
+            })
+        }
+
+        // 댓글 작성 칸을 눌렀을 때, 로그인 여부 확인
+        function checkLoginOnComment() {
+            if (loginUsername == null) {
+                alert("로그인이 필요한 기능입니다.");
+                window.location.href = "/user/login";
+            }
+        }
+
+        // 댓글 작성 기능
+        function writeComment() {
+            let contentNo = [[${result.getId()}]];
+            let username = [[${loginUsername}]];
+            let comment = $('#commentarea').val().trim();
+            if (comment == '') {
+                alert('댓글 내용을 입력해주세요.')
+                $('#commentarea').focus();
+                return;
+            }
+            let data = {
+                'username': username,
+                'contentNo': contentNo,
+                'comment': comment
+            }
+            $.ajax({
+                type: "POST",
+                url: '/api/comment/write',
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function(response){
+                    if (loginUsername != null){
+                        alert("댓글이 작성되었습니다.")
+                        window.location.reload();
+                    } else {
+                        alert("로그인이 필요한 기능입니다.")
+                        window.location.href="/user/login"
+                    }
+                }
+
+            })
+        }
+
+        // 댓글 수정버튼을 눌렀을 때 화면 기능
+        function editComment(id) {
+            showCommentEdits(id);
+            let comment = $(`#${id}-comment_comment`).text().trim();
+            $(`#${id}-text-comment-area`).val(comment);
+        }
+
+        function showCommentEdits(id) {
+            $(`#${id}-edit-comment-area`).show();
+            $(`#${id}-submit-comment`).show();
+
+            $(`#${id}-delete-comment`).hide();
+            $(`#${id}-comment_comment`).hide();
+            $(`#${id}-modify-comment`).hide();
+        }
+
+
+        // 댓글 수정완료를 눌렀을 때 게시글 최종 수정 기능
+        function editCommentComplete(commentId) {
+            // 수정 내용을 전달하기 위해 변수에 담아둔다.
+            let username = [[${loginUsername}]];
+            let comment = $(`#${commentId}-text-comment-area`).val().trim();
+            let contentNo = commentId;
+            if (comment == '') {
+                alert('댓글 내용을 입력해주세요.')
+                $(`#${commentId}-text-comment-area`).focus();
+                return;
+            }
+
+            // 전달할 변수들을 JSON으로 만들어준다.
+            let data = {
+                'username': username,
+                'comment': comment,
+                'contentNo': contentNo
+            };
+            // PUT /api/comment/{id} 에 data를 전달한다.
+            $.ajax({
+                type: "PUT",
+                url: `/api/comment/${commentId}`,
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    alert('댓글 수정이 완료되었습니다.');
+                    window.location.reload();
+                }
+            });
+        }
+
+        function deleteComment(id) {
+            let result = confirm("댓글을 삭제하시겠습니까?");
+            if (!result) {
+            } else {
+                $.ajax({
+                    type: "DELETE",
+                    url: `/api/comment/${id}`,
+                    success: function (response) {
+                        window.location.reload();
+                    }
+                })
+            }
+        }
+    </script>
+
+    <style>
+
+        @font-face {
+            font-family: 'MaruBuri-Regular';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'MaruBuri-Regular';
+        }
+
+        #wrap {
+            width: 900px;
+            margin: auto;
+            border: black solid 1px;
+            padding: 20px 20px 20px 20px;
+        }
+
+        #title-wrap {
+            font-size: 25px;
+            margin-bottom: 15px;
+        }
+
+        #content {
+            font-size: 18px;
+            height: 200px;
+        }
+
+        #date {
+            text-align: end;
+            display: contents;
+        }
+
+        .contents div.edit {
+            display: none;
+        }
+
+        .contents textarea {
+            border-right: none;
+            border-top: none;
+            border-left: none;
+            resize: none;
+            border-bottom: 1px solid #212529;
+            width: 100%;
+        }
+
+        .end-Edit {
+            display: none;
+        }
+
+        .edit {
+            display: none;
+        }
+
+        .editTitle {
+            width: 450px;
+        }
+
+        #backButton {
+            margin-bottom: 30px;
+        }
+
+        #commentarea {
+            margin-top: 10px;
+        }
+
+        #comment-username {
+            font-weight: bolder;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        #comment-date {
+            color: #8e8383;
+            font-size: 14px;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        #comment_each {
+            margin-top: 25px;
+            border-top: #8e8383 solid 1px;
+            border-bottom: #8e8383 solid 1px;
+            padding: 20px 5px 10px 5px;
+        }
+
+        .comment_comment {
+            font-weight: lighter;
+        }
+
+    </style>
+
+</head>
+<body>
+<div id="wrap">
+    <button id="backButton" type="button" onclick="window.location.href='/'">뒤로가기</button>
+    <div id="title-wrap">
+    <div id="title" class="text">
+        <span th:text="${result.getTitle()}"></span>
+    </div>
+    <div id="editTitle" class="edit">
+        <input id="titlearea" class="editTitle"/>
+    </div>
+    </div>
+    <div id="info-area">
+        <span id="username">작성자 : <i><span th:text="${result.getUsername()}"></span></i></span><br>
+        <span id="date">작성일 : <i><span th:text='${result.getCreatedAt().toString().split("T")[0]}'></span></i></span>
+    </div>
+    <hr>
+    <div id="content">
+        <div id="contents" class="text">
+            <span th:text="${result.getContents()}"></span>
+        </div>
+        <div id="editarea" class="edit">
+            <textarea id="textarea" class="te-edit" name="" cols="50" rows="11"></textarea>
+        </div>
+    </div>
+
+    <hr>
+    <button th:if="${loginUsername}==${result.getUsername()}" type="button" id="modify" class="show-Edit" onclick="editContent()">수정</button>
+    <button th:if="${loginUsername}==${result.getUsername()}" type="button" id="delete" class="delete-Content" onclick="deleteContent()">삭제</button>
+    <button th:if="${loginUsername}==${result.getUsername()}" type="button" id="submit" class="end-Edit" onclick="editComplete()">수정완료</button>
+    <br />
+    <hr />
+    <div id="commenting-area">
+        <span>댓글 작성</span>
+        <textarea id="commentarea" cols="95" rows="3" onclick="checkLoginOnComment()"></textarea>
+        <button type="button" id="comment-button" onclick="writeComment()">작성완료</button>
+    </div>
+    <div id="comment-list">
+        <th:block th:if='${!commentResult.equals("NoValue")}' th:each='comm:${commentResult}'>
+            <div id="comment_each">
+                <div id="comment-username">작성자 : <span th:text="${comm.username}"></span></div>
+                <div th:id="*{comm.id + '-comment_comment'}" class="comment_comment"><span th:text="${comm.comment}"></span></div>
+                <div th:id="*{comm.id + '-edit-comment-area'}" class="edit edit-comment-area">
+                    <textarea th:id="*{comm.id + '-text-comment-area'}" class="te-edit text-comment-area" cols="95" rows="2"></textarea>
+                </div>
+                <div id="comment-date"><span th:text='${comm.createdAt.toString().split("T")[0]}'></span></div>
+                <button th:if="${loginUsername}==${comm.username}" type="button" th:id="*{comm.id + '-modify-comment'}" class="show-Edit" th:onclick="editComment([[${comm.id}]])">수정</button>
+                <button th:if="${loginUsername}==${comm.username}" type="button" th:id="*{comm.id + '-delete-comment'}" class="delete-Content" th:onclick="deleteComment([[${comm.id}]])">삭제</button>
+                <button th:if="${loginUsername}==${comm.username}" type="button" th:id="*{comm.id + '-submit-comment'}" class="end-Edit" th:onclick="editCommentComplete([[${comm.id}]]);">수정완료</button>
+            </div>
+        </th:block>
+    </div>
+</div>
+
+</body>
+</html>

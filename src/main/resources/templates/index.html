@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모두의 게시판</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500&display=swap" rel="stylesheet">
+
+    <script th:inline="javascript">
+
+        function isValidContents(contents) {
+            if (contents == '') {
+                alert('내용을 입력해주세요');
+                return false;
+            }
+            if (contents.trim().length >= 500) {
+                alert('공백 포함 500자 이하로 입력해주세요');
+                return false;
+            }
+            return true;
+        }
+
+        function writeClose() {
+            $('.modal-wrapper').css("display", "none");
+        }
+
+        function btnWrite() {
+            let username = [[${loginUsername}]];
+            if (username == null) {
+                alert("로그인이 필요합니다.")
+                window.location.href="/user/login";
+            } else {
+                $('.modal-wrapper').css("display", "flex");
+                $('#modal-title').focus();
+            }
+        }
+
+        function contentClose() {
+            $('.modal2-wrapper').css("display", "none");
+        }
+
+        function viewContent() {
+            $('.modal2-wrapper').css("display", "flex");
+        }
+
+        $(document).ready(function () {
+            getContnets();
+        })
+
+        function getContnets() {
+            // 게시글 불러오기 ajax
+            $.ajax({
+                type: "GET",
+                url: "/api/contents",
+                success: function (response) {
+                    for (let i = 0; i < response.length; i++) {
+                        let result = response[i];
+                        let id = result['id'];
+                        let username = result['username'];
+                        let title = result['title'];
+                        let createdAt = result['createdAt'].split('T')[0];
+                        let modifiedAt = result['modifiedAt'].split('T')[0];
+                        addHTML(id, username, title, createdAt, modifiedAt)
+                    }
+
+                }
+            })
+        }
+
+        function toDetailPage(id) {
+            $.ajax({
+                type: "GET",
+                url: "/detail/id",
+                success: function (response){
+                }
+
+            })
+        }
+
+
+        // 메인페이지 게시글 리스트로 사용될 html
+       function addHTML(id, username, title, createAt, modifiedAt) {
+            // 1. HTML 태그 생성
+            let tempHtml = `<tr class="tableTr">
+                                <td class="tableTd">${id}</td>
+                                <td class="tableTdTitle" id="${id}-title"><a href="/content/${id}">${title}</a></td>
+                                <td class="tableTd">${username}</td>
+                                <td class="tableTd">${createAt}</td>
+                                <td class="tableTd">${modifiedAt}</td>
+                            </tr>`;
+            // 2. listTable에 하나씩 붙이기
+            $('#listTable').append(tempHtml);
+        }
+
+
+        // 게시글 생성
+        function writePost() {
+            let title = $('#modal-title').val().trim();
+            let username = [[${loginUsername}]];
+            let content = $('#modal-content').val().trim();
+            if (title == '') {
+                alert('제목을 입력해주세요.')
+                $(`#modal-title`).focus();
+                return;
+            }
+            if (content == '') {
+                alert('게시글 내용을 입력해주세요.')
+                $(`#modal-content`).focus();
+                return;
+            }
+            // 500자 이하 검증
+            let isValid = isValidContents(content);
+            if (isValid == false) {
+                return;
+            }
+            let data = {
+                'title': title,
+                'username': username,
+                'contents': content
+            }
+            $.ajax({
+                type: 'POST',
+                url: '/api/write',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    alert('게시글이 등록되었습니다.')
+                    window.location.reload();
+                }
+            })
+        }
+
+         // 게시글 수정버튼을 눌렀을 때 화면 기능
+        function editContent(id) {
+            showEdits(id);
+            let title = $(`#${id}-title`).text().trim();
+            let contents = $(`#${id}-contents`).text().trim();
+            $(`#${id}-titlearea`).val(title);
+            $(`#${id}-textarea`).val(contents);
+        }
+
+        function showEdits(id) {
+            $(`#${id}-editTitle`).show();
+            $(`#${id}-editarea`).show();
+            $(`#${id}-submit`).show();
+
+            $(`#${id}-title`).hide();
+            $(`#${id}-delete`).hide();
+            $(`#${id}-contents`).hide();
+            $(`#${id}-modify`).hide();
+        }
+
+        // 게시글 수정완료를 눌렀을 때 게시글 최종 수정 기능
+        function editComplete(id) {
+            // 1. 작성 대상 메모의 username과 contents 를 확인합니다.
+            let username = [[${loginUsername}]];
+            let title = $(`#${id}-titlearea`).val().trim();
+            let contents = $(`#${id}-textarea`).val().trim();
+            // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
+            if (isValidContents(contents) == false) {
+                return;
+            }
+            // 3. 전달할 data JSON으로 만듭니다.
+            let data = {
+                'username': username,
+                'title': title,
+                'contents': contents
+            };
+            // 4. PUT /api/memos/{id} 에 data를 전달합니다.
+            $.ajax({
+                type: "PUT",
+                url: `/api/content/${id}`,
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    alert('게시글 변경이 완료되었습니다.');
+                    window.location.reload();
+                }
+            });
+        }
+
+        function deleteContent(id) {
+            $.ajax({
+                type: "DELETE",
+                url: `/api/content/${id}`,
+                success: function (response) {
+                    alert('게시글 삭제에 성공하였습니다.');
+                    window.location.reload();
+                }
+            })
+        }
+
+
+
+    </script>
+
+    <style>
+
+        @font-face {
+            font-family: 'MaruBuri-Regular';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'MaruBuri-Regular';
+        }
+
+        #listTable {
+            border: black solid 1px;
+            width: 900px;
+        }
+
+        #wrap {
+            width: 900px;
+            margin: auto;
+        }
+
+        .tableTd {
+            border: black solid 1px;
+            text-align: center;
+        }
+
+        .tableTdTitle {
+            border: black solid 1px;
+            padding-left: 20px;
+            color: blue;
+        }
+
+        .tableNo {
+            width: 70px;
+            text-align: center;
+        }
+
+        .tableTitle {
+            width: 480px;
+            text-align: center;
+        }
+
+        .tableAuthor {
+            width: 150px;
+            text-align: center;
+        }
+
+        .tableCreateDate {
+            width: 100px;
+            text-align: center;
+        }
+
+        .tableUpdateDate {
+            width: 100px;
+            text-align: center;
+        }
+
+        #buttonArea {
+            margin-bottom: 15px;
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        .modal-wrapper {
+            position : fixed;
+            width: 900px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal2-wrapper {
+            position : fixed;
+            width: 900px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background: white;
+            padding-top: 24px;
+            padding-bottom: 24px;
+            padding-left: 100px;
+            border-radius: 3px;
+            width: 500px;
+        }
+
+        .modal2 {
+            background: white;
+            padding: 24px 16px;
+            border-radius: 3px;
+            width: 500px;
+        }
+
+        .modal-wrapper {
+            display: none;
+        }
+
+        .modal2-wrapper {
+            display: none;
+        }
+
+        #modal-title, #modal-content, #modal-username {
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        #writeComplete {
+            margin-right: 10px;
+        }
+
+
+        #title {
+            font-size: 25px;
+            margin-bottom: 15px;
+        }
+
+        #content {
+            font-size: 18px;
+            height: 200px;
+        }
+
+        #date {
+            text-align: end;
+            display: contents;
+        }
+
+        #closeContent {
+            text-align: right;
+        }
+
+        .tableColor {
+            background-color: black;
+            color: white;
+        }
+
+        .tableTdTitle:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .tableTr {
+            height: 35px;
+        }
+
+        .contents div.edit {
+            display: none;
+        }
+
+        .contents textarea.te-edit {
+            border-right: none;
+            border-top: none;
+            border-left: none;
+            resize: none;
+            border-bottom: 1px solid #212529;
+            width: 100%;
+        }
+
+        .end-Edit {
+            display: none;
+        }
+
+        .edit {
+            display: none;
+        }
+
+        .editTitle {
+            width: 450px;
+        }
+
+        #my_form {
+            text-align: right;
+        }
+
+        #login_form {
+            text-align: right;
+        }
+
+
+    </style>
+
+</head>
+<body>
+<div id="wrap">
+    <div class="modal-wrapper">
+        <div class="modal">
+            <div>제목</div>
+            <input id="modal-title" style="width: 400px" placeholder="제목을 입력하세요">
+            <div>내용</div>
+            <textarea id="modal-content" rows="5" style="width: 400px" placeholder="내용을 입력하세요.(500자 이하)"></textarea><br>
+            <button type="button" id="writeComplete" onclick="writePost()">작성완료</button>
+            <button type="button" id="writeClose" onclick="writeClose()">취소</button>
+        </div>
+    </div>
+    <div class="modal2-wrapper">
+        <div class="modal2Background" onclick="contentClose()"></div>
+        <div class="modal2">
+        </div>
+    </div>
+    <form th:if="${loginUsername != null}" id="my_form" method="post" action="/user/logout">
+        <button id="logout-text" onclick="document.getElementById('my_form').submit();">로그아웃</button>
+    </form>
+    <form th:if="${loginUsername == null}" id="login_form" method="get" action="/user/login">
+        <button id="login-text" onclick="document.getElementById('login_form').submit();">로그인</button>
+    </form>
+    <h3 th:if="${loginUsername != null}"><span th:text="${loginUsername}"></span>님 환영합니다!</h3>
+    <h1>게시글 목록입니다.</h1>
+    <div id="buttonArea">
+        <button type="button" id="btnWrite" onclick="btnWrite()">글쓰기</button>
+
+    </div>
+    <table id="listTable">
+        <tr class="tableTr">
+            <td class="tableNo tableTd tableColor">번호</td>
+            <td class="tableTitle tableTd tableColor">제목</td>
+            <td class="tableAuthor tableTd tableColor">작성자</td>
+            <td class="tableCreateDate tableTd tableColor">작성일</td>
+            <td class="tableUpdateDate tableTd tableColor">수정일</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>
