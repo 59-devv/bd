@@ -12,13 +12,14 @@ import javax.persistence.*;
 @Entity // DB 테이블 역할을 합니다.
 public class User {
 
+    // 회원 테이블 Column 생성
     // ID가 자동으로 생성 및 증가합니다.
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 
     // nullable: null 허용 여부
-// unique: 중복 허용 여부 (false 일때 중복 허용)
+    // unique: 중복 허용 여부 (false 일때 중복 허용)
     @Column(nullable = false, unique = true)
     private String username;
 
@@ -35,6 +36,7 @@ public class User {
     @Column(unique = true)
     private Long kakaoId;
 
+    // 기본 유저 생성자
     public User(String username, String password, String email, UserRoleEnum role) {
         this.username = username;
         this.password = password;
@@ -43,6 +45,7 @@ public class User {
         this.kakaoId = null;
     }
 
+    // 카카오 회원가입용 생성자
     public User(String username, String password, String email, UserRoleEnum role, Long kakaoId) {
         this.username = username;
         this.password = password;
@@ -51,6 +54,7 @@ public class User {
         this.kakaoId = kakaoId;
     }
 
+    // 회원가입 시 유효성 검사 후 유저 생성 (kakaoId = null)
     public User(String username, String password, String password2, String email, UserRoleEnum role) {
         this.username = username;
         this.password = password;

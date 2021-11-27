@@ -14,6 +14,8 @@ public class ContentService {
 
     private final ContentRepository contentRepository;
 
+    // 게시글 수정 기능
+    // 게시글이 수정될 때 DB에 잘 반영될 수 있도록 Transactional 부여
     @Transactional
     public Long update(Long id, ContentRequestDto requestDto) {
         Content content = contentRepository.findById(id).orElseThrow(

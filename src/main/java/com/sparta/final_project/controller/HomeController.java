@@ -22,6 +22,7 @@ public class HomeController {
     private final ContentRepository contentRepository;
     private final CommentRepository commentRepository;
 
+    // 홈페이지
     @GetMapping("/")
     public String home(Model model, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails != null) {
@@ -32,6 +33,7 @@ public class HomeController {
         return "index";
     }
 
+    // 게시글 상세페이지
     @GetMapping("/content/{id}")
     public String home(Model model, @PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
 

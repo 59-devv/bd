@@ -16,6 +16,7 @@
 
     <script th:inline="javascript">
 
+        // 로그인 회원의 닉네임을 global로 저장
         let loginUsername = [[${loginUsername}]];
 
         $(document).ready(function () {
@@ -27,73 +28,9 @@
             }
         })
 
-        // 아이디 확인 정규표현식
-        function is_nickname(asValue) {
-            let regExp = /^(?=.*[a-zA-Z])[-a-zA-Z0-9_.]{2,10}$/;
-            // True/False 형태로 반환
-            return regExp.test(asValue);
-        }
-
-        // 비밀번호 확인 정규표현식
-        function is_password(asValue) {
-            let regExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z!@#$%^&*]{8,20}$/;
-            // True/False 형태로 반환
-            return regExp.test(asValue);
-        }
-
-        // 아이디 체크 기능
-        function check_dup() {
-            let username = $("#input-username").val();
-            //입력칸이 공백이면 text 표시하고 포커스는 입력칸
-            if (username == "") {
-                $("#help-id")
-                    .text("아이디를 입력해주세요.")
-                    .removeClass("is-safe")
-                    .addClass("is-danger");
-                $("#input-username").focus();
-                return;
-            }
-            //입력한 값이 정규표현식에 맞지 않으면 text 표시하고 포커스는 입력칸
-            if (!is_nickname(username)) {
-                $("#help-id")
-                    .text(
-                        "아이디의 형식을 확인해주세요. 영문과 숫자, 일부 특수문자(._-) 사용 가능. 2-10자 길이"
-                    )
-                    .removeClass("is-safe")
-                    .addClass("is-danger");
-                $("#input-username").focus();
-                return;
-            }
-            let data = {
-                'username': username
-            }
-            // 아이디 중복체크
-            $.ajax({
-                type: "POST",
-                url: "/api/sign_up/check_dup",
-                contentType: "application/json",
-                data: JSON.stringify(data),
-                success: function (response) {
-                    console.log(response);
-                    //입력한 값이 exists로 불러온 db의 username에 일치하면 text 표시
-                    if (response === true) {
-                        $("#help-id")
-                            .text("이미 존재하는 아이디입니다.")
-                            .removeClass("is-safe")
-                            .addClass("is-danger");
-                        $("#input-username").focus();
-                        //아니면 사용가능하다는 text 표시
-                    } else {
-                        $("#help-id")
-                            .text("사용할 수 있는 아이디입니다.")
-                            .removeClass("is-danger")
-                            .addClass("is-success");
-                    }
-                },
-            });
-        }
-
+        //회원가입 버튼 눌렀을 때 기능
         function signUp() {
+            // 입력값 저장
             let username = $("#input-username").val();
             let password = $("#input-password").val();
             let password2 = $("#input-password2").val();
@@ -111,7 +48,7 @@
                 contentType: "application/json",
                 data: JSON.stringify(data),
                 success: function (response) {
-                    console.log(response);
+                    // 모든 항목이 유효성 검사를 통과했을 때
                     if (response["result"] === "Success"){
                         $("#id_msg").text("사용 가능한 아이디입니다.");
                         $("#id_msg").css({"color": "green"});
@@ -119,10 +56,11 @@
                         $("#pw_msg").css({"color": "green"});
                         $("#pw2_msg").text("비밀번호가 일치합니다.");
                         $("#pw2_msg").css({"color": "green"});
+                        // 윗 부분에서 모두 '초록 글씨'가 활성화 되도록 약간의 시간을 기다려줌
                         setTimeout(() => alert("회원가입에 성공했습니다."), 250);
                         setTimeout(() => window.location.href="/user/login", 250);
+                        // 유효성 검사를 통과하지 못했을 때,
                     } else {
-                        console.log(response["idCheck"], response["pwCheck"], response["pwCheck2"])
                         if(response["idCheck"] !== "") {
                             $("#id_msg").text(response["idCheck"]);
                             $("#id_msg").css({"color": "red"});

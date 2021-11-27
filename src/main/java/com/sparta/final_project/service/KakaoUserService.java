@@ -9,7 +9,6 @@ import com.sparta.final_project.model.UserRoleEnum;
 import com.sparta.final_project.repository.UserRepository;
 import com.sparta.final_project.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -32,24 +31,18 @@ public class KakaoUserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    @Autowired
-    public KakaoUserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
-
     // 카카오 로그인 처리
     public void kakaoLogin(String code) throws JsonProcessingException {
-        // 1. "인가 코드"로 "액세스 토큰" 요청
+        // "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getAccessToken(code);
 
-        // 2. 토큰으로 카카오 API 호출
+        // 토큰으로 카카오 API 호출
         KakaoUserInfoDto kakaoUserInfoDto = getKakaoInfo(accessToken);
 
-        // 3. 필요시에 회원가입
+        // 필요시에 회원가입
         User kakaoUser = registerKakaoUserIfNeeded(kakaoUserInfoDto);
 
-        // 4. 강제 로그인 처리
+        // 강제 로그인 처리
         forceLogin(kakaoUser);
     }
 
@@ -112,7 +105,6 @@ public class KakaoUserService {
         String email = jsonNode.get("kakao_account")
                 .get("email").asText();
 
-//        System.out.println("카카오 사용자 정보: " + id + ", " + nickname + ", " + email);
         KakaoUserInfoDto kakaoUserInfoDto = new KakaoUserInfoDto(id, nickname, email);
         return kakaoUserInfoDto;
     }

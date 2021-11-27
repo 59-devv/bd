@@ -1,7 +1,5 @@
 package com.sparta.final_project.service;
 
-import com.sparta.final_project.dto.SignupRequestDto;
-import com.sparta.final_project.dto.UserCheckDto;
 import com.sparta.final_project.dto.ValidCheckDto;
 import com.sparta.final_project.model.User;
 import com.sparta.final_project.model.UserRoleEnum;

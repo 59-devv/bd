@@ -11,6 +11,7 @@
 
     <script th:inline="javascript">
 
+        // 게시글이 공백이거나 너무 길 경우 (유효성 검사)
         function isValidContents(contents) {
             if (contents == '') {
                 alert('내용을 입력해주세요');
@@ -23,12 +24,15 @@
             return true;
         }
 
+        // 취소버튼 눌렀을 때
         function writeClose() {
             $('.modal-wrapper').css("display", "none");
         }
 
+        // 글쓰기 버튼 눌렀을 경우
         function btnWrite() {
             let username = [[${loginUsername}]];
+            // 로그인하지 않았을 때, 로그인 화면으로 보내기
             if (username == null) {
                 alert("로그인이 필요합니다.")
                 window.location.href="/user/login";
@@ -38,18 +42,17 @@
             }
         }
 
+        // 글쓰기 모달 닫기
         function contentClose() {
             $('.modal2-wrapper').css("display", "none");
         }
 
-        function viewContent() {
-            $('.modal2-wrapper').css("display", "flex");
-        }
 
         $(document).ready(function () {
             getContnets();
         })
 
+        // 전체 게시글 불러오기
         function getContnets() {
             // 게시글 불러오기 ajax
             $.ajax({
@@ -70,16 +73,6 @@
             })
         }
 
-        function toDetailPage(id) {
-            $.ajax({
-                type: "GET",
-                url: "/detail/id",
-                success: function (response){
-                }
-
-            })
-        }
-
 
         // 메인페이지 게시글 리스트로 사용될 html
        function addHTML(id, username, title, createAt, modifiedAt) {
@@ -96,7 +89,7 @@
         }
 
 
-        // 게시글 생성
+        // 글쓰기 모달
         function writePost() {
             let title = $('#modal-title').val().trim();
             let username = [[${loginUsername}]];
@@ -132,73 +125,11 @@
                 }
             })
         }
-
-         // 게시글 수정버튼을 눌렀을 때 화면 기능
-        function editContent(id) {
-            showEdits(id);
-            let title = $(`#${id}-title`).text().trim();
-            let contents = $(`#${id}-contents`).text().trim();
-            $(`#${id}-titlearea`).val(title);
-            $(`#${id}-textarea`).val(contents);
-        }
-
-        function showEdits(id) {
-            $(`#${id}-editTitle`).show();
-            $(`#${id}-editarea`).show();
-            $(`#${id}-submit`).show();
-
-            $(`#${id}-title`).hide();
-            $(`#${id}-delete`).hide();
-            $(`#${id}-contents`).hide();
-            $(`#${id}-modify`).hide();
-        }
-
-        // 게시글 수정완료를 눌렀을 때 게시글 최종 수정 기능
-        function editComplete(id) {
-            // 1. 작성 대상 메모의 username과 contents 를 확인합니다.
-            let username = [[${loginUsername}]];
-            let title = $(`#${id}-titlearea`).val().trim();
-            let contents = $(`#${id}-textarea`).val().trim();
-            // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
-            if (isValidContents(contents) == false) {
-                return;
-            }
-            // 3. 전달할 data JSON으로 만듭니다.
-            let data = {
-                'username': username,
-                'title': title,
-                'contents': contents
-            };
-            // 4. PUT /api/memos/{id} 에 data를 전달합니다.
-            $.ajax({
-                type: "PUT",
-                url: `/api/content/${id}`,
-                contentType: "application/json",
-                data: JSON.stringify(data),
-                success: function (response) {
-                    alert('게시글 변경이 완료되었습니다.');
-                    window.location.reload();
-                }
-            });
-        }
-
-        function deleteContent(id) {
-            $.ajax({
-                type: "DELETE",
-                url: `/api/content/${id}`,
-                success: function (response) {
-                    alert('게시글 삭제에 성공하였습니다.');
-                    window.location.reload();
-                }
-            })
-        }
-
-
-
     </script>
 
     <style>
 
+        /* 폰트 설정 */
         @font-face {
             font-family: 'MaruBuri-Regular';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff') format('woff');
@@ -315,26 +246,6 @@
             margin-right: 10px;
         }
 
-
-        #title {
-            font-size: 25px;
-            margin-bottom: 15px;
-        }
-
-        #content {
-            font-size: 18px;
-            height: 200px;
-        }
-
-        #date {
-            text-align: end;
-            display: contents;
-        }
-
-        #closeContent {
-            text-align: right;
-        }
-
         .tableColor {
             background-color: black;
             color: white;
@@ -349,29 +260,17 @@
             height: 35px;
         }
 
-        .contents div.edit {
+        .contents div {
             display: none;
         }
 
-        .contents textarea.te-edit {
+        .contents textarea {
             border-right: none;
             border-top: none;
             border-left: none;
             resize: none;
             border-bottom: 1px solid #212529;
             width: 100%;
-        }
-
-        .end-Edit {
-            display: none;
-        }
-
-        .edit {
-            display: none;
-        }
-
-        .editTitle {
-            width: 450px;
         }
 
         #my_form {

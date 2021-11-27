@@ -16,6 +16,7 @@
 
     <script th:inline="javascript">
 
+        // 로그인 회원의 닉네임을 global로 저장
         let loginUsername = [[${loginUsername}]];
 
         $(document).ready(function () {
@@ -51,6 +52,7 @@
 </div>
 </body>
 <script>
+    // 회원정보가 맞지 않을 경우, 에러 블록 띄어주기
     const href = location.href;
     const queryString = href.substring(href.indexOf("?") + 1)
     if (queryString === 'error') {

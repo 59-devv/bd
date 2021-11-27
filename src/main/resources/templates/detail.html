@@ -11,12 +11,11 @@
 
     <script th:inline="javascript">
 
+        // 현재 게시글의 번호를 global로 저장
         let global_id = [[${result.getId()}]]
+
+        // 로그인 회원의 닉네임을 global로 저장
         let loginUsername = [[${loginUsername}]]
-
-        $(document).ready(function () {
-        })
-
 
          // 게시글 수정버튼을 눌렀을 때 화면 기능
         function editContent() {
@@ -27,6 +26,7 @@
             $(`#textarea`).val(contents);
         }
 
+        // 수정 버튼 눌렀을 때 화면 기능
         function showEdits() {
             $(`#editTitle`).show();
             $(`#editarea`).show();
@@ -67,6 +67,7 @@
             });
         }
 
+        // 게시글 삭제 기능
         function deleteContent() {
             $.ajax({
                 type: "DELETE",
@@ -167,6 +168,7 @@
             });
         }
 
+        // 댓글 삭제 기능
         function deleteComment(id) {
             let result = confirm("댓글을 삭제하시겠습니까?");
             if (!result) {
@@ -184,6 +186,7 @@
 
     <style>
 
+        /*폰트 설정*/
         @font-face {
             font-family: 'MaruBuri-Regular';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff') format('woff');
